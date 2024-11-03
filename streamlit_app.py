@@ -26,7 +26,7 @@ def matchesNoneInList(w1,wl2):
 def getWord(secret, guess, wv):
     oldwords=st.session_state.oldwords
     wordlist = [secret,guess]+oldwords
-    weights = [1,1]+[-0.1 for i in range(len(oldwords))]
+    weights = [1,1]+[-0.001 for i in range(len(oldwords))]
     cluelist = weighted_between(wv,wordlist,weights)
     for word, fit in cluelist:
         if matchesNoneInList(word , oldwords +[secret]):
