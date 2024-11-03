@@ -59,11 +59,11 @@ def makeGuess(newGuess,secret,wv):
             return
         st.session_state.oldwords.append(newHint)
         sim=wv.similarity(secret,newGuess)*100
-        outputtext= "\""+newGuess+ "\" is %.0f %% similar to the secret word. " %sim
+        outputtext= "\""+newGuess+ "\" is %.0f %% similar to the secret word. \n\n" %sim
         outputtext+="The secret word and the word \""\
                     +newGuess+\
                    "\" are both related to the word \""\
-                   +newHint+"\" "
+                   +newHint+"\" \n\n"
         if sim>=65:
             outputtext+="You are close. The first letter is: "\
                         +str(secret)[0]
