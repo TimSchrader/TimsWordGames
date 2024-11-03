@@ -58,24 +58,20 @@ def makeGuess(newGuess,secret,wv):
             outText("Sorry, no clue found")
             return
         st.session_state.oldwords.append(newHint)
-        outputtext="The secret word and the word \""\
+        sim=wv.similarity(secret,newGuess)*100
+        outputtext= "\""+newGuess+ "\" is %.0f %% similar to the secret word. " %sim
+        outputtext+="The secret word and the word \""\
                     +newGuess+\
                    "\" are both related to the word \""\
                    +newHint+"\" "
-        if fit>=0.7:
-            outputtext+="You are very close. The first two letters are: "\
-                        +str(secret)[0:2]
-        elif fit>=0.6:
+        if sim>=65:
             outputtext+="You are close. The first letter is: "\
                         +str(secret)[0]
-        elif fit>=0.5:
-            outputtext+="You are somewhat close. The secret word has "\
-                        +str(len(secret))+ " letters."
         outText(outputtext)
 
 def initialization():
     os.environ['GENSIM_DATA_DIR'] = "."
-    st.session_state.wv = gensim.downloader.load('glove-twitter-25')#'glove-wiki-gigaword-300') is slower and better
+    st.session_state.wv = gensim.downloader.load('glove-twitter-25')
     wv = st.session_state.wv
     st.session_state.solved=False
     st.session_state.secret = ""
