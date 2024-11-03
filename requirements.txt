@@ -1,4 +1,4 @@
-pip install streamlit
-pip install gensim
-pip install numpy
-pip install streamlit_js_eval
+streamlit
+gensim
+numpy
+streamlit_js_eval
