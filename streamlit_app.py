@@ -1,10 +1,12 @@
 import streamlit as st
 from gensim.models import KeyedVectors as kv
+import gensim.downloader
 import numpy as np
 from difflib import SequenceMatcher
 import random as rdm
 from commonWords import wordlist
 from streamlit_js_eval import streamlit_js_eval
+import os
 
 def weighted_between(model, ws, gs): # ws: words gs: weights
     vs = np.array([np.array(model[w]) for w in ws])
@@ -28,8 +30,8 @@ def getWord(secret, guess, wv):
     cluelist = weighted_between(wv,wordlist,weights)
     for word, fit in cluelist:
         if matchesNoneInList(word , oldwords +[secret]):
-            return word
-    return None
+            return word, fit
+    return None, None
 
 def outText(outputText):
     returnText.markdown(outputText)
@@ -51,27 +53,41 @@ def makeGuess(newGuess,secret,wv):
         return
     else:
         st.session_state.oldwords.append(newGuess)
-        newHint=getWord(secret,newGuess,wv)
+        newHint, fit =getWord(secret,newGuess,wv)
         if newHint==None:
             outText("Sorry, no clue found")
             return
         st.session_state.oldwords.append(newHint)
-        outText( \
-                "The secret word and the word \n\""\
-                +newGuess+\
-                "\"\n are both related to the word\n\""\
-                +newHint+"\"")
+        outputtext="The secret word and the word \""\
+                    +newGuess+\
+                   "\" are both related to the word \""\
+                   +newHint+"\" "
+        if fit>=0.7:
+            outputtext+="You are very close. The first two letters are: "\
+                        +str(secret)[0:2]
+        elif fit>=0.6:
+            outputtext+="You are close. The first letter is: "\
+                        +str(secret)[0]
+        elif fit>=0.5:
+            outputtext+="You are somewhat close. The secret word has "\
+                        +str(len(secret))+ " letters."
+        outText(outputtext)
 
-def initialization(wv):
+def initialization():
+    os.environ['GENSIM_DATA_DIR'] = "."
+    st.session_state.wv = gensim.downloader.load('glove-wiki-gigaword-300')
+    wv = st.session_state.wv
     st.session_state.solved=False
     st.session_state.secret = ""
-    while not st.session_state.secret in wv.key_to_index:
+    while not st.session_state.secret in wv.key_to_index and\
+            len(st.session_state.secret) <=6:
         st.session_state.secret=rdm.choice(wordlist).strip()
     st.session_state.returnText="init error"
     outText("Try to guess the secret word.  \
             (always press enter before pressing guess.)") #overwrites init error
     st.session_state.initialized = True
     st.session_state.oldwords = []
+
 def reload():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
 
@@ -79,19 +95,27 @@ def giveup():
     outText("The word was: "+st.session_state.secret)
     st.session_state.solved=True
 
+#instead downloaded at initialization
 #from https://huggingface.co/fse/glove-wiki-gigaword-300/tree/main
-wv = kv.load("glove-wiki-gigaword-300.model", mmap='r')
+#if os.path.isfile("glove-wiki-gigaword-300.model"):
+#    wv = kv.load("glove-wiki-gigaword-300.model", mmap='r')
+#    st.write("reloading")
+#else:
+#    st.write("Downloading!")
+#    os.environ['GENSIM_DATA_DIR'] = "."
+#    wv = gensim.downloader.load('glove-wiki-gigaword-300')
 
 st.title("Tims Word Game")
 returnText = st.empty() # text box that talks to user
 if 'initialized' not in st.session_state \
     or not st.session_state.initialized:
-    initialization(wv)
+    initialization()
 outText(st.session_state.returnText) # this often gets rerun
 
+wv = st.session_state.wv
+
 # Create two columns; adjust the ratio ?
-col1, col2 = st.columns([1,1],\
-                        vertical_alignment="bottom") 
+col1, col2 = st.columns([1,1], vertical_alignment="bottom") 
 with col1:
     newGuess= str(st.text_input(label="",key="inputbox")).lower()
 with col2:
