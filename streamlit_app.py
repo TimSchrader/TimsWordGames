@@ -125,7 +125,7 @@ with col2:
               args=(newGuess,st.session_state.secret,wv),key="guess")
     
 historyText= st.empty() # shows previous guesses
-
+history("") # for all repeated calls
 if st.session_state.solved:
     st.button(label="play again?",on_click=reload,\
               key="playagain")
