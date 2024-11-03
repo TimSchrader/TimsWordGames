@@ -76,7 +76,7 @@ def makeGuess(newGuess,secret,wv):
 
 def initialization():
     os.environ['GENSIM_DATA_DIR'] = "."
-    st.session_state.wv = gensim.downloader.load('glove-twitter-25')
+    st.session_state.wv = gensim.downloader.load('glove-wiki-gigaword-100')
     wv = st.session_state.wv
     st.session_state.solved=False
     st.session_state.secret = ""
