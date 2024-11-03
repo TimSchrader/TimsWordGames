@@ -72,7 +72,7 @@ def makeGuess(newGuess,secret,wv):
             outputtext+="You are close. The first letter is: "\
                         +str(secret)[0]
         outText(outputtext)
-        historyText(newGuess+ " "+ "%.0f %% " %sim + " -> " + newHint)
+        history(newGuess+ " "+ "%.0f %% " %sim + " -> " + newHint)
 
 def initialization():
     os.environ['GENSIM_DATA_DIR'] = "."
