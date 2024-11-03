@@ -79,7 +79,7 @@ def initialization():
             len(st.session_state.secret) <=6:
         st.session_state.secret=rdm.choice(wordlist).strip()
     st.session_state.returnText="init error"
-    outText("Try to guess the secret word.  \
+    outText("Try to guess the secret word. \n\n \
             (always press enter before pressing guess.)") #overwrites init error
     st.session_state.initialized = True
     st.session_state.oldwords = []
