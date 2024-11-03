@@ -37,6 +37,10 @@ def outText(outputText):
     returnText.markdown(outputText)
     st.session_state.returnText=outputText
 
+def history(histText):
+    st.session_state.historyText=histText + "\n\n" + st.session_state.historyText
+    historyText.markdown(st.session_state.historyText)
+
 def makeGuess(newGuess,secret,wv):
     outText("Let me think about that.")
     if len(newGuess)<=1: 
@@ -68,6 +72,7 @@ def makeGuess(newGuess,secret,wv):
             outputtext+="You are close. The first letter is: "\
                         +str(secret)[0]
         outText(outputtext)
+        historyText(newGuess+ " "+ "%.0f %% " %sim + " -> " + newHint)
 
 def initialization():
     os.environ['GENSIM_DATA_DIR'] = "."
@@ -79,10 +84,11 @@ def initialization():
             len(st.session_state.secret) <=6:
         st.session_state.secret=rdm.choice(wordlist).strip()
     st.session_state.returnText="init error"
-    outText("Try to guess the secret word. \n\n \
-            (always press enter before pressing guess.)") #overwrites init error
+    outText("Try to guess the secret word.") #overwrites init error
+            # \n\n (always press enter before pressing guess.)")
     st.session_state.initialized = True
     st.session_state.oldwords = []
+    st.session_state.historyText=""
 
 def reload():
     streamlit_js_eval(js_expressions="parent.window.location.reload()")
@@ -117,6 +123,9 @@ with col1:
 with col2:
     st.button(label="guess",on_click=makeGuess,\
               args=(newGuess,st.session_state.secret,wv),key="guess")
+    
+historyText= st.empty() # shows previous guesses
+
 if st.session_state.solved:
     st.button(label="play again?",on_click=reload,\
               key="playagain")
