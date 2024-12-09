@@ -74,9 +74,13 @@ def makeGuess(newGuess,secret,wv):
         outText(outputtext)
         history(newGuess+ " "+ "%.0f %% " %sim + " -> " + newHint)
 
+@st.cache_resource
+def getwv():
+    return gensim.downloader.load('glove-wiki-gigaword-100')
+
 def initialization():
     os.environ['GENSIM_DATA_DIR'] = "."
-    st.session_state.wv = gensim.downloader.load('glove-wiki-gigaword-100')
+    st.session_state.wv = getwv()
     wv = st.session_state.wv
     st.session_state.solved=False
     st.session_state.secret = ""
