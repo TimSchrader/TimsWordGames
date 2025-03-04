@@ -8,41 +8,50 @@ from commonWords import wordlist
 from streamlit_js_eval import streamlit_js_eval
 import os
 
-def weighted_between(model, ws, gs): # ws: words gs: weights
-    vs = np.array([np.array(model[w]) for w in ws])
-    cs = np.array([vs[i] * gs[i] for i in range(len(gs))])# cv: (weighted) center vector
+def getClueList(model, words, weights) -> list:
+    '''Returns an ordered list of words 
+       that closely match the input words.'''
+    vs = np.array([np.array(model[w]) for w in words])
+    # cv: (weighted) center vector
+    cs = np.array([vs[i] * weights[i] for i in range(len(weights))])
     cv = cs.sum(axis=0)
     cv = cv / np.linalg.norm(cv)
     return model.similar_by_vector(cv)
 
-def matches(w1,w2):
+def matches(w1,w2) -> bool:
+    '''Checks if two strings (kind of) match.'''
     return SequenceMatcher(None,str(w1),str(w2)).ratio()>0.8
 
-def matchesNoneInList(w1,wl2):
+def matchesNoneInList(w1,wl2) -> bool:
+    '''Checks if a word is (kind of) in a wordlist.'''
     for w2 in wl2:
         if matches(w1,w2): return False
     return True
 
-def getWord(secret, guess, wv):
+def getWord(secret, guess, wv) -> tuple[str,float]:
+    '''Finds a word that is a good hint.'''
     oldwords=st.session_state.oldwords
     wordlist = [secret,guess]+oldwords
     weights = [1,1]+[-0.001 for i in range(len(oldwords))]
-    cluelist = weighted_between(wv,wordlist,weights)
+    cluelist = getClueList(wv,wordlist,weights)
     for word, fit in cluelist:
         if matchesNoneInList(word , oldwords +[secret]):
             return word, fit
     return None, None
 
 def outText(outputText):
+    '''Writes the output text.'''
     returnText.markdown(outputText)
     st.session_state.returnText=outputText
 
 def history(histText):
+    '''Adds text to the displayed history.'''
     st.session_state.historyText=histText + "\n\n" + st.session_state.historyText
     historyText.markdown(st.session_state.historyText)
 
 def makeGuess(newGuess,secret,wv):
-    outText("Let me think about that.")
+    '''Responds to a guess.'''
+    outText("Please let me think about that for a moment.")
     if len(newGuess)<=1: 
         outText("The guess \""+newGuess+"\" is to short.")
         return
@@ -76,9 +85,11 @@ def makeGuess(newGuess,secret,wv):
 
 @st.cache_resource
 def getwv():
+    '''Gives cached wordvector or downloads it'''
     return gensim.downloader.load('glove-wiki-gigaword-100')
 
 def initialization():
+    '''Sets up session_state and thinks of secret word.'''
     os.environ['GENSIM_DATA_DIR'] = "."
     st.session_state.wv = getwv()
     wv = st.session_state.wv
@@ -101,16 +112,7 @@ def giveup():
     outText("The word was: "+st.session_state.secret)
     st.session_state.solved=True
 
-#instead downloaded at initialization
-#from https://huggingface.co/fse/glove-wiki-gigaword-300/tree/main
-#if os.path.isfile("glove-wiki-gigaword-300.model"):
-#    wv = kv.load("glove-wiki-gigaword-300.model", mmap='r')
-#    st.write("reloading")
-#else:
-#    st.write("Downloading!")
-#    os.environ['GENSIM_DATA_DIR'] = "."
-#    wv = gensim.downloader.load('glove-wiki-gigaword-300')
-
+# setup the page
 st.title("Tims Word Game")
 returnText = st.empty() # text box that talks to user
 if 'initialized' not in st.session_state \
@@ -118,9 +120,9 @@ if 'initialized' not in st.session_state \
     initialization()
 outText(st.session_state.returnText) # this often gets rerun
 
-wv = st.session_state.wv
+wv = st.session_state.wv # wordvector
 
-# Create two columns; adjust the ratio ?
+# Create two columns for visualization
 col1, col2 = st.columns([1,1], vertical_alignment="bottom") 
 with col1:
     newGuess= str(st.text_input(label="",key="inputbox")).lower()
